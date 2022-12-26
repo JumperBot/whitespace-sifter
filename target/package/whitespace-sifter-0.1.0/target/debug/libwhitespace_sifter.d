@@ -1,0 +1,1 @@
+/home/csg/coding/whitespace-sifter/target/package/whitespace-sifter-0.1.0/target/debug/libwhitespace_sifter.rlib: /home/csg/coding/whitespace-sifter/target/package/whitespace-sifter-0.1.0/src/whitespace_sifter/lib.rs

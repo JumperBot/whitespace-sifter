@@ -7,7 +7,7 @@ Other than that, it naturally removes the whitespaces at the start and end of th
 
 # Examples
 
-```rust
+```rust-lang
 use whitespace_sifter::*;
 
 fn main() {
