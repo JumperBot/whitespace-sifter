@@ -8,17 +8,15 @@
 //! ```
 //! use whitespace_sifter::*;
 //!
-//! fn main() {
-//!   // This prints `1.. 2.. 3.. 4.. 5..`.
-//!   println!("{}", sift("1.. \n2..  \n\n3..   \n\n\n4..    \n\n\n\n5..     \n\n\n\n\n"));
+//! // This prints `1.. 2.. 3.. 4.. 5..`.
+//! println!("{}", sift("1.. \n2..  \n\n3..   \n\n\n4..    \n\n\n\n5..     \n\n\n\n\n"));
 //!
-//!   // This prints `A..\r\nB..\r\nC..\r\nD..\r\nE..`.
-//!   println!("{}", sift_with_carriage_return("A..\r\n B..\r\n\r\n C..\r\n\r\n\r\n D..\r\n\r\n\r\n\r\n E..\r\n\r\n\r\n\r\n\r\n"));
-//! }
+//! // This prints `A..\r\nB..\r\nC..\r\nD..\r\nE..`.
+//! println!("{}", sift_with_carriage_return("A..\r\n B..\r\n\r\n C..\r\n\r\n\r\n D..\r\n\r\n\r\n\r\n E..\r\n\r\n\r\n\r\n\r\n"));
 //! ```
 
 /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str`.
-/// 
+///
 /// If the `&str` contains carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
 pub fn sift(input: &str) -> String {
@@ -40,7 +38,7 @@ pub fn sift(input: &str) -> String {
 }
 
 /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` that contains carriage-returns.
-/// 
+///
 /// This treats carriage-returns as just one `char` in the `&str`.  
 /// If the `&str` does not contain carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
