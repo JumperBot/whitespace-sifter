@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["sift","This remove duplicate whitespaces within the `&str`."],["sift_with_carriage_return","This remove duplicate whitespaces within the `&str` that contains carriage-returns."]]};
