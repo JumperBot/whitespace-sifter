@@ -1,12 +1,12 @@
 [package]
 name = "whitespace-sifter"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"
 license = "MIT"
-keywords = ["whitespace", "duplicate", "sifter", "strainer", "string"]
-categories = ["compression", "development-tools", "text-processing", "value-formatting"]
+keywords = ["duplicate", "sifter", "string", "text", "whitespace"]
+categories = ["compression", "development-tools", "text-processing", "value-formatting", "visualization"]
 repository = "https://github.com/JumperBot/whitespace-sifter/"
 
 [lib]
@@ -15,3 +15,7 @@ test = true
 doctest = true
 doc = true
 crate-type = ["lib"]
+
+[features]
+default = ["preserve_newline"]
+preserve_newline = []
