@@ -34,21 +34,18 @@
 /// If the `&str` contains carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
 pub fn sift(input: &str) -> String {
-    let mut buf: &str = input;
-    let mut out: String = String::new();
-    while !buf.is_empty() {
-        out.push_str(&buf[..1]);
-        buf = &buf[1..];
-        if buf.is_empty() {
-            break;
-        }
-        let next: &str = &buf[..1];
-        if next.trim().is_empty() {
-            out.push_str(next);
-        }
-        buf = buf.trim();
-    }
-    out
+    let mut is_last_char_whitespace: bool = false;
+    input
+        .chars()
+        .filter(|x| {
+            let is_char_whitespace: bool = x.is_ascii_whitespace();
+            let res: bool = !(is_char_whitespace && is_last_char_whitespace);
+            is_last_char_whitespace = is_char_whitespace;
+            res
+        })
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` that contains carriage-returns.
@@ -57,25 +54,22 @@ pub fn sift(input: &str) -> String {
 /// If the `&str` does not contain carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
 pub fn sift_with_carriage_return(input: &str) -> String {
-    let mut buf: &str = input;
-    let mut out: String = String::new();
-    while !buf.is_empty() {
-        out.push_str(&buf[..1]);
-        buf = &buf[1..];
-        if buf.is_empty() {
-            break;
-        }
-        let next: &str = &buf[..1];
-        if next.trim().is_empty() {
-            if buf.len() > 1 && next.eq("\r") && &buf[1..2] == "\n" {
-                out.push_str("\r\n");
-            } else {
-                out.push_str(next);
-            }
-        }
-        buf = buf.trim();
-    }
-    out
+    let mut is_last_char_whitespace: bool = false;
+    let mut is_last_char_carriage_return: bool = false;
+    input
+        .chars()
+        .filter(|x| {
+            let is_char_whitespace: bool = x.is_ascii_whitespace();
+            let is_char_carriage_return: bool = x == &'\r';
+            let res: bool = (is_last_char_carriage_return && x == &'\n')
+                || !(is_char_whitespace && is_last_char_whitespace);
+            is_last_char_whitespace = is_char_whitespace;
+            is_last_char_carriage_return = is_char_carriage_return;
+            res
+        })
+        .collect::<String>()
+        .trim()
+        .replace("\r\n\n", "\r\n")
 }
 
 #[cfg(feature = "preserve_newline")]
@@ -87,62 +81,30 @@ pub mod preserve_newline {
     /// If the `&str` contains carriage-returns do not use this.  
     /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
     pub fn sift(input: &str) -> String {
-        let mut temp: Vec<&str>=input.split('\n').collect();
-        temp.retain(|&x| !x.trim().is_empty());
-        let mut output: String=String::new();
-        for x in temp{
-            let mut buf: &str = x;
-            let mut out: String = String::new();
-            while !buf.is_empty() {
-                out.push_str(&buf[..1]);
-                buf = &buf[1..];
-                if buf.is_empty() {
-                    break;
-                }
-                let next: &str = &buf[..1];
-                if next.trim().is_empty() {
-                    out.push_str(next);
-                }
-                buf = buf.trim();
-            }
-            if !out.trim().is_empty(){
-                output.push_str(&out.trim());
-                output.push('\n');
-            }
-        }
-        output.trim().to_string()
+        input
+            .split('\n')
+            .map(|x| x.trim())
+            .filter(|x| !x.is_empty())
+            .collect::<Vec<&str>>()
+            .join("\n")
+            .trim()
+            .to_string()
     }
-    
+
     /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` that contains carriage-returns.
     ///
     /// This treats carriage-returns as just one `char` in the `&str`.  
     /// If the `&str` does not contain carriage-returns do not use this.  
     /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
     pub fn sift_with_carriage_return(input: &str) -> String {
-        let mut temp: Vec<&str>=input.split("\r\n").collect();
-        temp.retain(|&x| !x.trim().is_empty());
-        let mut output: String=String::new();
-        for x in temp{
-            let mut buf: &str = x;
-            let mut out: String = String::new();
-            while !buf.is_empty() {
-                out.push_str(&buf[..1]);
-                buf = &buf[1..];
-                if buf.is_empty() {
-                    break;
-                }
-                let next: &str = &buf[..1];
-                if next.trim().is_empty() {
-                    out.push_str(next);
-                }
-                buf = buf.trim();
-            }
-            if !out.trim().is_empty(){
-                output.push_str(&out.trim());
-                output.push_str("\r\n");
-            }
-        }
-        output.trim().to_string()
+        input
+            .split("\r\n")
+            .map(|x| x.trim())
+            .filter(|x| !x.is_empty())
+            .collect::<Vec<&str>>()
+            .join("\r\n")
+            .trim()
+            .to_string()
     }
 }
 
