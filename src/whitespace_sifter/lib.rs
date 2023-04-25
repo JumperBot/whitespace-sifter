@@ -34,16 +34,16 @@
 /// If the `&str` contains carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
 pub fn sift(input: &str) -> String {
-    let mut is_last_char_whitespace: bool = false;
     input
         .chars()
-        .filter(|x| {
-            let is_char_whitespace: bool = x.is_ascii_whitespace();
-            let res: bool = !(is_char_whitespace && is_last_char_whitespace);
-            is_last_char_whitespace = is_char_whitespace;
-            res
+        .map(|c| (c.to_string(), c.is_ascii_whitespace()))
+        .fold(("!".to_string(), false), |(a, aw), (b, bw)| {
+            if bw && aw {
+                return (a, aw);
+            }
+            (a + &b, bw)
         })
-        .collect::<String>()
+        .0[1..]
         .trim()
         .to_string()
 }
@@ -54,22 +54,18 @@ pub fn sift(input: &str) -> String {
 /// If the `&str` does not contain carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
 pub fn sift_with_carriage_return(input: &str) -> String {
-    let mut is_last_char_whitespace: bool = false;
-    let mut is_last_char_carriage_return: bool = false;
     input
         .chars()
-        .filter(|x| {
-            let is_char_whitespace: bool = x.is_ascii_whitespace();
-            let is_char_carriage_return: bool = x == &'\r';
-            let res: bool = (is_last_char_carriage_return && x == &'\n')
-                || !(is_char_whitespace && is_last_char_whitespace);
-            is_last_char_whitespace = is_char_whitespace;
-            is_last_char_carriage_return = is_char_carriage_return;
-            res
+        .map(|c| (c.to_string(), c.is_ascii_whitespace(), c))
+        .fold(("!".to_string(), false, '!'), |(a, aw, ac), (b, bw, bc)| {
+            if bw && aw && (ac, bc) != ('\r', '\n') {
+                return (a, aw, ac);
+            }
+            (a + &b, bw, bc)
         })
-        .collect::<String>()
+        .0[1..]
         .trim()
-        .replace("\r\n\n", "\r\n")
+        .to_string()
 }
 
 #[cfg(feature = "preserve_newline")]
@@ -85,8 +81,7 @@ pub mod preserve_newline {
             .split('\n')
             .map(|x| x.trim())
             .filter(|x| !x.is_empty())
-            .collect::<Vec<&str>>()
-            .join("\n")
+            .fold(String::new(), |acc, e| acc + "\n" + e)
             .trim()
             .to_string()
     }
@@ -101,8 +96,7 @@ pub mod preserve_newline {
             .split("\r\n")
             .map(|x| x.trim())
             .filter(|x| !x.is_empty())
-            .collect::<Vec<&str>>()
-            .join("\r\n")
+            .fold(String::new(), |acc, e| acc + "\r\n" + e)
             .trim()
             .to_string()
     }
