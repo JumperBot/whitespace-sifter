@@ -34,18 +34,17 @@
 /// If the `&str` contains carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
 pub fn sift(input: &str) -> String {
-    input
-        .chars()
-        .map(|c| (c.to_string(), c.is_ascii_whitespace()))
-        .fold(("!".to_string(), false), |(a, aw), (b, bw)| {
-            if bw && aw {
-                return (a, aw);
-            }
-            (a + &b, bw)
-        })
-        .0[1..]
-        .trim()
-        .to_string()
+    let mut out: String = String::with_capacity(input.len());
+    let mut is_last_whitespace: bool = false;
+    for c in input.trim().chars() {
+        let is_whitespace: bool = c.is_ascii_whitespace();
+        if is_whitespace && is_last_whitespace {
+            continue;
+        }
+        is_last_whitespace = is_whitespace;
+        out.push(c);
+    }
+    out
 }
 
 /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` that contains carriage-returns.
@@ -54,18 +53,26 @@ pub fn sift(input: &str) -> String {
 /// If the `&str` does not contain carriage-returns do not use this.  
 /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
 pub fn sift_with_carriage_return(input: &str) -> String {
-    input
-        .chars()
-        .map(|c| (c.to_string(), c.is_ascii_whitespace(), c))
-        .fold(("!".to_string(), false, '!'), |(a, aw, ac), (b, bw, bc)| {
-            if bw && aw && (ac, bc) != ('\r', '\n') {
-                return (a, aw, ac);
-            }
-            (a + &b, bw, bc)
-        })
-        .0[1..]
-        .trim()
-        .to_string()
+    let mut out: String = String::with_capacity(input.len());
+    let mut is_last_whitespace: bool = false;
+    let mut is_last_carriage_return: bool = false;
+    for c in input.trim().chars() {
+        let is_carriage_return: bool = c == '\r';
+        let is_newline: bool = c == '\n';
+        let is_whitespace: bool = c.is_ascii_whitespace();
+        if is_newline && is_last_carriage_return {
+            out.push(c);
+            is_last_carriage_return = false;
+            continue;
+        }
+        if is_whitespace && is_last_whitespace {
+            continue;
+        }
+        out.push(c);
+        is_last_carriage_return = is_carriage_return;
+        is_last_whitespace = is_whitespace;
+    }
+    out
 }
 
 #[cfg(feature = "preserve_newline")]
@@ -77,13 +84,25 @@ pub mod preserve_newline {
     /// If the `&str` contains carriage-returns do not use this.  
     /// Use [`whitespace-sifter::sift_with_carriage_return(...)`](./fn.sift_with_carriage_return.html) instead.
     pub fn sift(input: &str) -> String {
-        input
-            .split('\n')
-            .map(|x| x.trim())
-            .filter(|x| !x.is_empty())
-            .fold(String::new(), |acc, e| acc + "\n" + e)
-            .trim()
-            .to_string()
+        let mut out: String = String::with_capacity(input.len());
+        for val in input.trim().split('\n') {
+            let val: &str = val.trim();
+            if val.is_empty() {
+                continue;
+            }
+            let mut is_last_whitespace: bool = false;
+            for c in val.trim().chars() {
+                let is_whitespace: bool = c.is_ascii_whitespace();
+                if is_whitespace && is_last_whitespace {
+                    continue;
+                }
+                is_last_whitespace = is_whitespace;
+                out.push(c);
+            }
+            out.push('\n');
+        }
+        out.remove(out.len() - 1);
+        out
     }
 
     /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` that contains carriage-returns.
@@ -92,13 +111,35 @@ pub mod preserve_newline {
     /// If the `&str` does not contain carriage-returns do not use this.  
     /// Use [`whitespace-sifter::sift(...)`](./fn.sift.html) instead.
     pub fn sift_with_carriage_return(input: &str) -> String {
-        input
-            .split("\r\n")
-            .map(|x| x.trim())
-            .filter(|x| !x.is_empty())
-            .fold(String::new(), |acc, e| acc + "\r\n" + e)
-            .trim()
-            .to_string()
+        let mut out: String = String::with_capacity(input.len());
+        for val in input.trim().split("\r\n") {
+            let val: &str = val.trim();
+            if val.is_empty() {
+                continue;
+            }
+            let mut is_last_whitespace: bool = false;
+            let mut is_last_carriage_return: bool = false;
+            for c in val.trim().chars() {
+                let is_carriage_return: bool = c == '\r';
+                let is_newline: bool = c == '\n';
+                let is_whitespace: bool = c.is_ascii_whitespace();
+                if is_newline && is_last_carriage_return {
+                    out.push(c);
+                    is_last_carriage_return = false;
+                    continue;
+                }
+                if is_whitespace && is_last_whitespace {
+                    continue;
+                }
+                out.push(c);
+                is_last_carriage_return = is_carriage_return;
+                is_last_whitespace = is_whitespace;
+            }
+            out.push_str("\r\n");
+        }
+        out.remove(out.len() - 1);
+        out.remove(out.len() - 1);
+        out
     }
 }
 
