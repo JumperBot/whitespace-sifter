@@ -1,10 +1,10 @@
 [package]
 name = "whitespace-sifter"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"
-license-file = "LICENSE"
+license = "MIT"
 keywords = ["duplicate", "sifter", "string", "text", "whitespace"]
 categories = ["compression", "development-tools", "text-processing", "value-formatting", "visualization"]
 repository = "https://github.com/JumperBot/whitespace-sifter/"
