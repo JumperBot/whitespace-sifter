@@ -26,6 +26,11 @@
 #[must_use]
 pub fn sift(input: &str) -> String {
     let mut out: String = String::with_capacity(input.len());
+    sift_preallocated(input, &mut out);
+    out
+}
+
+fn sift_preallocated(input: &str, out: &mut String) {
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     for c in input.trim().chars() {
@@ -44,7 +49,6 @@ pub fn sift(input: &str) -> String {
         is_last_carriage_return = is_carriage_return;
         is_last_whitespace = is_whitespace;
     }
-    out
 }
 
 /// This remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str` while preserving deduplicated newlines.  
@@ -52,13 +56,14 @@ pub fn sift(input: &str) -> String {
 #[must_use]
 pub fn sift_preserve_newlines(input: &str) -> String {
     let mut out: String = String::with_capacity(input.len());
+    #[allow(clippy::str_split_at_newline)]
     for val in input.trim().split('\n') {
         let ends_with_carriage_return: bool = val.ends_with('\r');
         let val: &str = val.trim();
         if val.is_empty() {
             continue;
         }
-        out.push_str(&sift(val));
+        sift_preallocated(val, &mut out);
         if ends_with_carriage_return {
             out.push_str("\r\n");
             continue;

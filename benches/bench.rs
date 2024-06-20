@@ -21,11 +21,11 @@ fn benchmark_sift_preserved(c: &mut Criterion) {
         c.iter(|| {
             input
                 .split("\r\n")
-                .map(|x| x.trim())
+                .map(str::trim)
                 .filter(|x| !x.is_empty())
                 .fold(String::new(), |acc, e| {
                     acc + "\n"
-                        + &e.chars()
+                        + e.chars()
                             .map(|c| (c.to_string(), c.is_ascii_whitespace(), c))
                             .fold(("!".to_string(), false, '!'), |(a, aw, ac), (b, bw, bc)| {
                                 if bw && aw && (ac, bc) != ('\r', '\n') {
@@ -35,7 +35,6 @@ fn benchmark_sift_preserved(c: &mut Criterion) {
                             })
                             .0[1..]
                             .trim()
-                            .to_string()
                 })
                 .trim()
                 .to_string()
@@ -44,13 +43,14 @@ fn benchmark_sift_preserved(c: &mut Criterion) {
     g.bench_with_input("Loop Sift", &input, |c, input| {
         c.iter(|| {
             let mut out: String = String::with_capacity(input.len());
+            #[allow(clippy::str_split_at_newline)]
             for val in input.trim().split('\n') {
                 let ends_with_carriage_return: bool = val.ends_with('\r');
                 let val: &str = val.trim();
                 if val.is_empty() {
                     continue;
                 }
-                out.push_str(&sift(val));
+                sift_preallocated(val, &mut out);
                 if ends_with_carriage_return {
                     out.push_str("\r\n");
                     continue;
@@ -70,8 +70,13 @@ fn benchmark_sift_preserved(c: &mut Criterion) {
     g.finish();
 }
 
-fn sift(input: &str) -> String {
+#[must_use] pub fn sift(input: &str) -> String {
     let mut out: String = String::with_capacity(input.len());
+    sift_preallocated(input, &mut out);
+    out
+}
+
+fn sift_preallocated(input: &str, out: &mut String) {
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     for c in input.trim().chars() {
@@ -90,7 +95,6 @@ fn sift(input: &str) -> String {
         is_last_carriage_return = is_carriage_return;
         is_last_whitespace = is_whitespace;
     }
-    out
 }
 
 fn benchmark_sift(c: &mut Criterion) {
