@@ -12,20 +12,18 @@
 ---
 
 ```rust
-use whitespace_sifter::*;
-
+use whitespace_sifter::WhitespaceSifter;
 // This prints `1.. 2.. 3.. 4.. 5..`.
 println!(
     "{}",
-    sift("1.. \n2..  \n\r\n\n3..   \n\n\n4..    \n\n\r\n\n\n5..     \n\n\n\n\n")
+    "1.. \n2..  \n\r\n\n3..   \n\n\n4..    \n\n\r\n\n\n5..     \n\n\n\n\n".sift(),
 );
 
 // This prints `1..\n2..\n3..\n4..\r\n5..`.
 println!(
     "{}",
-    sift_preserve_newlines(
-        "1.. \n2..  \n\r\n3..   \n\n\n4..    \r\n\n\r\n\n5..     \n\n\n\n\n"
-    )
+    "1.. \n2..  \n\r\n3..   \n\n\n4..    \r\n\n\r\n\n5..     \n\n\n\n\n"
+        .sift_preserve_newlines(),
 );
 ```
 
@@ -33,8 +31,8 @@ println!(
 
 ## ✨ Sift Duplicate Whitespaces In One Function Call
 
-This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within the `&str`.  
-Other than that, it naturally removes the whitespaces at the start and end of the `&str` using [`str::trim()`](https://doc.rust-lang.org/std/primitive.str.html#method.trim).
+This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a `string`.  
+Other than that, it naturally removes the whitespaces at the start and end of the `string` using [`str::trim()`](https://doc.rust-lang.org/std/primitive.str.html#method.trim).
 
 ---
 
@@ -43,29 +41,7 @@ Other than that, it naturally removes the whitespaces at the start and end of th
 Performance is one of the priorities of this crate.  
 One of the advises is to not listen to repository authors/maintainers when it comes to benchmarks.  
 You are free to run `cargo bench` on your machine after cloning this repository instead.  
-These are the `String`s used to benchmark this crate:
-
-```rust
-format!(
-     "{}\n\n{}\n\n{}\n\r\n\n{}\r\n\n\r\n{}\r\n\r\n{}\r\n\r\n\r\n",
-     "This\u{0020}\u{0020}is\u{0020}\u{0020}\u{0020}a\u{0020}\u{0020}sentence...",
-     "With\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}some\u{0020}\u{0020}duplicate...",
-     "Whitespaces.",
-     "This\u{0020}\u{0020}is\u{0020}\u{0020}\u{0020}a\u{0020}\u{0020}sentence...",
-     "With\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}some\u{0020}\u{0020}duplicate...",
-     "Whitespaces."
-)
-// And
-format!(
-    "{}\n\n{}\n\n{}\n\n\n{}\r\n\n\r\n{}\r\n\r\n{}\r\n\r\n\r\n",
-    "This. \n\nis. \n\na. \n\nsentence... \n\n",
-    "With. \n\nsome. \n\nduplicate... \n\n",
-    "Whitespaces. \n\n",
-    "This. \r\n\r\nis. \r\n\r\na. \r\n\r\nsentence... \r\n\r\n",
-    "With. \r\n\r\nsome. \r\n\r\nduplicate... \r\n\r\n",
-    "Whitespaces. \r\n\r\n"
-)
-```
+The benchmark uses a transcript of the [Bee Movie](https://movies.fandom.com/wiki/Bee_Movie/Transcript).
 
 Execute these commands to benchmark:
 
@@ -75,27 +51,16 @@ $ cd whitespace-sifter
 $ cargo bench
 ```
 
-You should only look for 2 out of 4 benchmarks that look like the following:
+You should only look for results that look like the following:
 
 ```bash
-Sift preserved/Loop Sift
-                        time:   [844.28 ns 844.75 ns 845.21 ns]
-                        change: [-2.9161% -1.0275% +0.3801%] (p = 0.29 > 0.05)
-                        No change in performance detected.
-Found 13 outliers among 100 measurements (13.00%)
-  6 (6.00%) low mild
-  5 (5.00%) high mild
-  2 (2.00%) high severe
-
-Sift/Loop Sift          time:   [645.18 ns 646.98 ns 649.86 ns]
-                        change: [-0.7310% -0.1503% +0.4542%] (p = 0.67 > 0.05)
-                        No change in performance detected.
-Found 20 outliers among 100 measurements (20.00%)
-  8 (8.00%) low severe
-  3 (3.00%) low mild
-  2 (2.00%) high mild
-  7 (7.00%) high severe
+Sift/Sift               time:   [284.16 µs 310.00 µs 339.70 µs]
+Sift Preserved/Sift Preserved
+                        time:   [391.47 µs 400.57 µs 414.17 µs]
 ```
+
+Not even half a second; Pretty impressive, no?  
+Go try it on a better machine, I guess.
 
 ---
 

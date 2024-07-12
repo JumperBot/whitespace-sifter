@@ -1,6 +1,6 @@
 [package]
 name = "whitespace-sifter"
-version = "1.0.2"
+version = "2.0.0"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"
@@ -22,7 +22,3 @@ test = true
 doctest = true
 doc = true
 crate-type = ["lib"]
-
-[features]
-default = ["preserve_newline"]
-preserve_newline = []
