@@ -1,6 +1,6 @@
 [package]
 name = "whitespace-sifter"
-version = "2.0.0"
+version = "2.1.0"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"

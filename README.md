@@ -54,12 +54,12 @@ $ cargo bench
 You should only look for results that look like the following:
 
 ```bash
-Sift/Sift               time:   [284.16 µs 310.00 µs 339.70 µs]
+Sift/Sift               time:   [237.05 µs 237.52 µs 238.24 µs]
 Sift Preserved/Sift Preserved
-                        time:   [391.47 µs 400.57 µs 414.17 µs]
+                        time:   [255.31 µs 255.79 µs 256.39 µs]
 ```
 
-Not even half a second; Pretty impressive, no?  
+In just 0.0002 seconds; Pretty impressive, no?  
 Go try it on a better machine, I guess.
 
 ---
