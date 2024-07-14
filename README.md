@@ -32,7 +32,7 @@ println!(
 ## ✨ Sift Duplicate Whitespaces In One Function Call
 
 This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a `string`.  
-Other than that, it naturally removes the whitespaces at the start and end of the `string` using [`str::trim()`](https://doc.rust-lang.org/std/primitive.str.html#method.trim).
+Other than that, it naturally removes the whitespaces at the start and end of the `string`.
 
 ---
 
@@ -54,12 +54,12 @@ $ cargo bench
 You should only look for results that look like the following:
 
 ```bash
-Sift/Sift               time:   [237.05 µs 237.52 µs 238.24 µs]
+Sift/Sift               time:   [176.65 µs 177.11 µs 177.73 µs]
 Sift Preserved/Sift Preserved
-                        time:   [255.31 µs 255.79 µs 256.39 µs]
+                        time:   [242.64 µs 243.04 µs 243.79 µs]
 ```
 
-In just 0.0002 seconds; Pretty impressive, no?  
+In just 0.0001 seconds; Pretty impressive, no?  
 Go try it on a better machine, I guess.
 
 ---
