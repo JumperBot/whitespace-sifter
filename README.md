@@ -32,15 +32,13 @@ println!(
 ## ✨ Sift Duplicate Whitespaces In One Function Call
 
 This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a `string`.  
-Other than that, it naturally removes the whitespaces at the start and end of the `string`.
+It naturally removes the whitespaces at the start and end of the `string`.
 
 ---
 
 ## ⚡️Benchmarks
 
-Performance is one of the priorities of this crate.  
-One of the advises is to not listen to repository authors/maintainers when it comes to benchmarks.  
-You are free to run `cargo bench` on your machine after cloning this repository instead.  
+Performance is a priority; Most updates are performance improvements.  
 The benchmark uses a transcript of the [Bee Movie](https://movies.fandom.com/wiki/Bee_Movie/Transcript).
 
 Execute these commands to benchmark:
@@ -54,13 +52,20 @@ $ cargo bench
 You should only look for results that look like the following:
 
 ```bash
-Sift/Sift               time:   [176.65 µs 177.11 µs 177.73 µs]
+Sift/Sift               time:   [159.31 µs 159.60 µs 159.95 µs]
 Sift Preserved/Sift Preserved
-                        time:   [242.64 µs 243.04 µs 243.79 µs]
+                        time:   [198.11 µs 198.21 µs 198.32 µs]
 ```
 
 In just 0.0001 seconds; Pretty impressive, no?  
-Go try it on a better machine, I guess.
+<details>
+<summary>Go try it on a better machine, I guess.</summary>
+Benchmark specifications:  
+<ul>
+<li>Processor: Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90 GHz</li>
+<li>Memory: RAM 16.0 GB (15.8 GB usable)</li>
+<li>System: GNU/Linux 5.15.153.1-microsoft-standard-WSL2 x86_64</li>
+</details>
 
 ---
 

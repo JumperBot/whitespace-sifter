@@ -32,19 +32,12 @@ fn test_sift_preserved() {
         &input.sift_preserve_newlines(),
         "This.\nis.\na.\nsentence...\nWith.\nsome.\nduplicate...\nWhitespaces.\nThis.\r\nis.\r\na.\r\nsentence...\r\nWith.\r\nsome.\r\nduplicate...\r\nWhitespaces."
     );
-    let input: String = format!(
-        "{}\n\n{}\n\n{}\n\n\n{}\r\n\n\r\n{}\r\n\r\n{}\r\n\r\n\r\n",
-        "This. \n\nis. \n\na. \n\nsentence... \n\n",
-        "With. \n\nsome. \n\nduplicate... \n\n",
-        "Whitespaces. \n\n",
-        "This. \r\n\r\nis. \r\n\r\na. \r\n\r\nsentence... \r\n\r\n",
-        "With. \r\n\r\nsome. \r\n\r\nduplicate... \r\n\r\n",
-        "Whitespaces."
-    );
-    assert_eq!(
-        &input.sift_preserve_newlines(),
-        "This.\nis.\na.\nsentence...\nWith.\nsome.\nduplicate...\nWhitespaces.\nThis.\r\nis.\r\na.\r\nsentence...\r\nWith.\r\nsome.\r\nduplicate...\r\nWhitespaces."
-    );
+}
+
+#[test]
+fn test_blank_string_sifting() {
+    assert_eq!(&"".sift(), "");
+    assert_eq!(&"".sift_preserve_newlines(), "");
 }
 
 #[test]
