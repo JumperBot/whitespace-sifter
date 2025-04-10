@@ -53,12 +53,12 @@ pub trait WhitespaceSifter: AsRef<str> {
         if out.len() > 1 {
             let out_mut: &mut Vec<u8> = unsafe { out.as_mut_vec() };
             let new_out_mut_len: usize = unsafe { out_mut.len().unchecked_sub(2) };
-            if *unsafe { out_mut.get_unchecked(new_out_mut_len) } == CARRIAGE_RETURN {
+            if unsafe { out_mut.as_ptr().add(new_out_mut_len).read() } == CARRIAGE_RETURN {
                 unsafe { out_mut.set_len(new_out_mut_len) };
                 return out;
             }
             let new_out_mut_len: usize = unsafe { out_mut.len().unchecked_sub(1) };
-            if *unsafe { out_mut.get_unchecked(new_out_mut_len) } == LINE_FEED {
+            if unsafe { out_mut.as_ptr().add(new_out_mut_len).read() } == LINE_FEED {
                 unsafe { out_mut.set_len(new_out_mut_len) };
             }
         }
@@ -77,7 +77,7 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
     let mut is_last_carriage_return: bool = false;
     let mut is_last_carriage_return_line_feed: bool = false;
     while ind < bytes.len() {
-        match get_char_metadata(*unsafe { bytes.get_unchecked(ind) }) {
+        match get_char_metadata(unsafe { bytes.as_ptr().add(ind).read() }) {
             Character::SingleByte { data } => {
                 ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
@@ -123,7 +123,7 @@ fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut Stri
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     while *ind < bytes.len() {
-        match get_char_metadata(*unsafe { bytes.get_unchecked(*ind) }) {
+        match get_char_metadata(unsafe { bytes.as_ptr().add(*ind).read() }) {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
@@ -164,7 +164,7 @@ fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut Stri
 /// A custom implementation of `str::trim_start`.
 fn sift_trim_start(bytes: &[u8], ind: &mut usize, out: &mut String) {
     while *ind < bytes.len() {
-        match get_char_metadata(*unsafe { bytes.get_unchecked(*ind) }) {
+        match get_char_metadata(unsafe { bytes.as_ptr().add(*ind).read() }) {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
                 if !is_ascii_whitespace(data) {
@@ -229,7 +229,7 @@ fn extend_from_bytes_with_len(bytes: &[u8], ind: &mut usize, out: &mut String, l
     let new_ind: usize = unsafe { ind.unchecked_add(len) };
     unsafe {
         out.as_mut_vec()
-            .unsafe_extend(bytes.get_unchecked(*ind..new_ind));
+            .unsafe_custom_extend(bytes.as_ptr().add(*ind), len);
     }
     *ind = new_ind;
 }

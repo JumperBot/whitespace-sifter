@@ -4,7 +4,7 @@ pub(crate) trait UnsafeVec<T> {
     unsafe fn unsafe_push(&mut self, item: T);
 
     /// Extend to a `Vec` without checking the capacity.
-    unsafe fn unsafe_extend(&mut self, item: &[T]);
+    unsafe fn unsafe_custom_extend(&mut self, ptr: *const T, len: usize);
 }
 
 impl<T> UnsafeVec<T> for Vec<T> {
@@ -13,8 +13,8 @@ impl<T> UnsafeVec<T> for Vec<T> {
         self.set_len(self.len().unchecked_add(1));
     }
 
-    unsafe fn unsafe_extend(&mut self, item: &[T]) {
-        std::ptr::copy_nonoverlapping(item.as_ptr(), self.as_mut_ptr(), item.len());
-        self.set_len(self.len().unchecked_add(item.len()));
+    unsafe fn unsafe_custom_extend(&mut self, ptr: *const T, len: usize) {
+        std::ptr::copy_nonoverlapping(ptr, self.as_mut_ptr().add(self.len()), len);
+        self.set_len(self.len().unchecked_add(len));
     }
 }

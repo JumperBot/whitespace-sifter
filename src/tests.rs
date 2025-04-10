@@ -5,7 +5,7 @@ fn test_sift() {
     let input: String = format!(
         "{}\n\n{}\n\n{}\n\r\n\n{}\r\n\n\r\n{}\r\n\r\n{}\r\n\r\n\r\n",
         "This\u{0020}\u{0020}is\u{0020}\u{0020}\u{0020}a\u{0020}\u{0020}sentence...",
-        "With\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}some\u{0020}\u{0020}duplicate...",
+        "❤️With\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}some\u{0020}\u{0020}duplicate...",
         "Whitespaces.",
         "This\u{0020}\u{0020}is\u{0020}\u{0020}\u{0020}a\u{0020}\u{0020}sentence...",
         "With\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}some\u{0020}\u{0020}duplicate...",
@@ -13,7 +13,7 @@ fn test_sift() {
     );
     assert_eq!(
         &input.sift(),
-        "This is a sentence...\nWith some duplicate...\nWhitespaces.\nThis is a sentence...\r\nWith some duplicate...\r\nWhitespaces."
+        "This is a sentence...\n❤️With some duplicate...\nWhitespaces.\nThis is a sentence...\r\nWith some duplicate...\r\nWhitespaces."
     );
 }
 
@@ -22,7 +22,7 @@ fn test_sift_preserved() {
     let input: String = format!(
         "{}\n\n{}\n\n{}\n\n\n{}\r\n\n\r\n{}\r\n\r\n{}\r\n\r\n\r\n",
         "This. \n\nis. \n\na. \n\nsentence... \n\n",
-        "With. \n\nsome. \n\nduplicate... \n\n",
+        "✨With. \n\nsome. \n\nduplicate... \n\n",
         "Whitespaces. \n\n",
         "This. \r\n\r\nis. \r\n\r\na. \r\n\r\nsentence... \r\n\r\n",
         "With. \r\n\r\nsome. \r\n\r\nduplicate... \r\n\r\n",
@@ -30,7 +30,7 @@ fn test_sift_preserved() {
     );
     assert_eq!(
         &input.sift_preserve_newlines(),
-        "This.\nis.\na.\nsentence...\nWith.\nsome.\nduplicate...\nWhitespaces.\nThis.\r\nis.\r\na.\r\nsentence...\r\nWith.\r\nsome.\r\nduplicate...\r\nWhitespaces."
+        "This.\nis.\na.\nsentence...\n✨With.\nsome.\nduplicate...\nWhitespaces.\nThis.\r\nis.\r\na.\r\nsentence...\r\nWith.\r\nsome.\r\nduplicate...\r\nWhitespaces."
     );
 }
 
