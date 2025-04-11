@@ -1,5 +1,5 @@
 //! Sift duplicate whitespaces away in just one function call.
-//! This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a `string`.  
+//! This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a UTF-8 encoded `string`.  
 //! It naturally removes the whitespaces at the start and end of the `string`.
 //!
 //! # Examples
@@ -73,6 +73,7 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
     let mut ind: usize = 0;
     sift_trim_start(bytes, &mut ind, out);
     // Actual sifting
+    let mut copy_len: usize = 0;
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     let mut is_last_carriage_return_line_feed: bool = false;
@@ -82,30 +83,42 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
                 ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
                     if data == LINE_FEED && is_last_carriage_return {
-                        unsafe {
-                            out.as_mut_vec().unsafe_push(LINE_FEED);
-                        }
+                        copy_len = unsafe { copy_len.unchecked_add(1) };
                         is_last_carriage_return = false;
                         is_last_carriage_return_line_feed = true;
                         continue;
                     }
                     if is_last_whitespace {
+                        unsafe {
+                            out.as_mut_vec().unsafe_custom_extend(
+                                bytes.as_ptr().add(ind).sub(copy_len).sub(1),
+                                copy_len,
+                            );
+                        }
+                        copy_len = 0;
                         continue;
                     }
                     is_last_whitespace = true;
                 } else {
                     is_last_whitespace = false;
                 }
-                unsafe { out.as_mut_vec().unsafe_push(data) };
+                copy_len = unsafe { copy_len.unchecked_add(1) };
                 is_last_carriage_return = data == CARRIAGE_RETURN;
                 is_last_carriage_return_line_feed = false;
                 continue;
             }
-            Character::MultiByte { len } => extend_from_bytes_with_len(bytes, &mut ind, out, len),
+            Character::MultiByte { len } => {
+                copy_len = unsafe { copy_len.unchecked_add(len) };
+                ind = unsafe { ind.unchecked_add(len) };
+            }
         }
         is_last_carriage_return = false;
         is_last_whitespace = false;
         is_last_carriage_return_line_feed = false;
+    }
+    unsafe {
+        out.as_mut_vec()
+            .unsafe_custom_extend(bytes.as_ptr().add(ind).sub(copy_len), copy_len);
     }
     // Implementation of str::trim_end()
     if is_last_carriage_return_line_feed {
@@ -120,6 +133,7 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
 fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut String) {
     sift_trim_start(bytes, ind, out);
     // Actual sifting
+    let mut copy_len: usize = 0;
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     while *ind < bytes.len() {
@@ -128,6 +142,12 @@ fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut Stri
                 *ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
                     if data == LINE_FEED {
+                        unsafe {
+                            out.as_mut_vec().unsafe_custom_extend(
+                                bytes.as_ptr().add(*ind).sub(copy_len).sub(1),
+                                copy_len,
+                            );
+                        }
                         // Implementation of str::trim_end()
                         let out_mut: &mut Vec<u8> = unsafe { out.as_mut_vec() };
                         if is_last_whitespace {
@@ -143,20 +163,34 @@ fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut Stri
                     }
                     is_last_carriage_return = data == CARRIAGE_RETURN;
                     if is_last_whitespace {
+                        unsafe {
+                            out.as_mut_vec().unsafe_custom_extend(
+                                bytes.as_ptr().add(*ind).sub(copy_len).sub(1),
+                                copy_len,
+                            );
+                        }
+                        copy_len = 0;
                         continue;
                     }
                     is_last_whitespace = true;
                 } else {
                     is_last_whitespace = false;
                 }
-                unsafe { out.as_mut_vec().unsafe_push(data) };
+                copy_len = unsafe { copy_len.unchecked_add(1) };
                 is_last_carriage_return = data == CARRIAGE_RETURN;
                 continue;
             }
-            Character::MultiByte { len } => extend_from_bytes_with_len(bytes, ind, out, len),
+            Character::MultiByte { len } => {
+                copy_len = unsafe { copy_len.unchecked_add(len) };
+                *ind = unsafe { ind.unchecked_add(len) };
+            }
         }
         is_last_carriage_return = false;
         is_last_whitespace = false;
+    }
+    unsafe {
+        out.as_mut_vec()
+            .unsafe_custom_extend(bytes.as_ptr().add(*ind).sub(copy_len), copy_len);
     }
     sift_trim_end(out, is_last_whitespace);
 }
@@ -173,7 +207,11 @@ fn sift_trim_start(bytes: &[u8], ind: &mut usize, out: &mut String) {
                 }
             }
             Character::MultiByte { len } => {
-                extend_from_bytes_with_len(bytes, ind, out, len);
+                unsafe {
+                    out.as_mut_vec()
+                        .unsafe_custom_extend(bytes.as_ptr().add(*ind), len);
+                }
+                *ind = unsafe { ind.unchecked_add(len) };
                 break;
             }
         }
@@ -222,16 +260,6 @@ const fn is_ascii_whitespace(codepoint: u8) -> bool {
         codepoint,
         SPACE | HORIZONTAL_TAB | LINE_FEED | FORM_FEED | CARRIAGE_RETURN
     )
-}
-
-/// A function mostly used for `Character::MultiByte` copying.
-fn extend_from_bytes_with_len(bytes: &[u8], ind: &mut usize, out: &mut String, len: usize) {
-    let new_ind: usize = unsafe { ind.unchecked_add(len) };
-    unsafe {
-        out.as_mut_vec()
-            .unsafe_custom_extend(bytes.as_ptr().add(*ind), len);
-    }
-    *ind = new_ind;
 }
 
 #[cfg(test)]

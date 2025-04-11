@@ -31,7 +31,7 @@ println!(
 
 ## ✨ Sift Duplicate Whitespaces In One Function Call
 
-This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a `string`.  
+This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a UTF-8 encoded `string`.  
 It naturally removes the whitespaces at the start and end of the `string`.
 
 ---
@@ -52,12 +52,13 @@ $ cargo bench
 You should only look for results that look like the following:
 
 ```bash
-Sift/Sift               time:   [159.31 µs 159.60 µs 159.95 µs]
+Sift/Sift               time:   [179.04 µs 179.13 µs 179.24 µs]
 Sift Preserved/Sift Preserved
-                        time:   [198.11 µs 198.21 µs 198.32 µs]
+                        time:   [179.35 µs 179.49 µs 179.64 µs]
 ```
 
-In just 0.0001 seconds; Pretty impressive, no?  
+In just 0.0001 seconds; Pretty impressive, no?
+
 <details>
 <summary>Go try it on a better machine, I guess.</summary>
 Benchmark specifications:  
@@ -65,7 +66,21 @@ Benchmark specifications:
 <li>Processor: Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90 GHz</li>
 <li>Memory: RAM 16.0 GB (15.8 GB usable)</li>
 <li>System: GNU/Linux 5.15.153.1-microsoft-standard-WSL2 x86_64</li>
+<li>Modified: v2.3.2</li>
+</ul>
 </details>
+
+---
+
+## 🔊 Changelog
+
+- Improved Performance
+- Stricter Tests (as of v2.3.2)
+  - Proper UTF-8/Unicode Encoding
+  - Regular Sifting
+  - Sifting With Leading Whitespaces
+  - Documentation Assertion
+- 2024 Edition Migration (as of v2.3.2)
 
 ---
 
