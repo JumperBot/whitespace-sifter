@@ -74,13 +74,13 @@ Benchmark specifications:
 
 ## 🔊 Changelog
 
-- Improved Performance
-- Stricter Tests (as of v2.3.2)
+- Minimum Supported Rust Version set to `v1.79.0` (starting `v2.3.3`)
+- Stricter Tests (starting `v2.3.2`)
   - Proper UTF-8/Unicode Encoding
   - Regular Sifting
   - Sifting With Leading Whitespaces
   - Documentation Assertion
-- 2024 Edition Migration (as of v2.3.2)
+  - MSRV Verification
 
 ---
 
