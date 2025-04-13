@@ -52,9 +52,9 @@ $ cargo bench
 You should only look for results that look like the following:
 
 ```bash
-Sift/Sift               time:   [179.04 µs 179.13 µs 179.24 µs]
+Sift/Sift               time:   [178.65 µs 178.69 µs 178.75 µs]
 Sift Preserved/Sift Preserved
-                        time:   [179.35 µs 179.49 µs 179.64 µs]
+                        time:   [179.41 µs 179.62 µs 179.85 µs]
 ```
 
 In just 0.0001 seconds; Pretty impressive, no?
@@ -66,7 +66,7 @@ Benchmark specifications:
 <li>Processor: Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90 GHz</li>
 <li>Memory: RAM 16.0 GB (15.8 GB usable)</li>
 <li>System: GNU/Linux 5.15.153.1-microsoft-standard-WSL2 x86_64</li>
-<li>Modified: v2.3.2</li>
+<li>Modified: v2.3.4-alpha.1</li>
 </ul>
 </details>
 

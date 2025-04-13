@@ -33,7 +33,7 @@ pub trait WhitespaceSifter: AsRef<str> {
     fn sift(&self) -> String {
         let input: &str = self.as_ref();
         let mut out: String = String::with_capacity(input.len());
-        crate::sift_preallocated(input.as_bytes(), &mut out);
+        crate::sift_preallocated(input.as_ptr(), input.len(), unsafe { out.as_mut_vec() });
         out
     }
 
@@ -44,22 +44,23 @@ pub trait WhitespaceSifter: AsRef<str> {
     #[must_use]
     fn sift_preserve_newlines(&self) -> String {
         let input: &str = self.as_ref();
+        let in_ptr: *const u8 = input.as_ptr();
+        let in_len: usize = input.len();
         let mut out: String = String::with_capacity(input.len());
-        let bytes: &[u8] = input.as_bytes();
+        let out_vec: &mut Vec<u8> = unsafe { out.as_mut_vec() };
         let mut ind: usize = 0;
-        while ind < bytes.len() {
-            crate::sift_preallocated_until_newline(bytes, &mut ind, &mut out);
+        while ind < in_len {
+            crate::sift_preallocated_until_newline(in_ptr, in_len, &mut ind, out_vec);
         }
-        if out.len() > 1 {
-            let out_mut: &mut Vec<u8> = unsafe { out.as_mut_vec() };
-            let new_out_mut_len: usize = unsafe { out_mut.len().unchecked_sub(2) };
-            if unsafe { out_mut.as_ptr().add(new_out_mut_len).read() } == CARRIAGE_RETURN {
-                unsafe { out_mut.set_len(new_out_mut_len) };
+        if out_vec.len() > 1 {
+            let new_out_mut_len: usize = unsafe { out_vec.len().unchecked_sub(2) };
+            if unsafe { out_vec.as_ptr().add(new_out_mut_len).read() } == CARRIAGE_RETURN {
+                unsafe { out_vec.set_len(new_out_mut_len) };
                 return out;
             }
-            let new_out_mut_len: usize = unsafe { out_mut.len().unchecked_sub(1) };
-            if unsafe { out_mut.as_ptr().add(new_out_mut_len).read() } == LINE_FEED {
-                unsafe { out_mut.set_len(new_out_mut_len) };
+            let new_out_mut_len: usize = unsafe { out_vec.len().unchecked_sub(1) };
+            if unsafe { out_vec.as_ptr().add(new_out_mut_len).read() } == LINE_FEED {
+                unsafe { out_vec.set_len(new_out_mut_len) };
             }
         }
         out
@@ -69,16 +70,16 @@ pub trait WhitespaceSifter: AsRef<str> {
 impl<T: AsRef<str>> WhitespaceSifter for T {}
 
 /// A utility for `sift`.
-fn sift_preallocated(bytes: &[u8], out: &mut String) {
+fn sift_preallocated(in_ptr: *const u8, in_len: usize, out: &mut Vec<u8>) {
     let mut ind: usize = 0;
-    sift_trim_start(bytes, &mut ind, out);
+    sift_trim_start(in_ptr, in_len, &mut ind, out);
     // Actual sifting
     let mut copy_len: usize = 0;
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     let mut is_last_carriage_return_line_feed: bool = false;
-    while ind < bytes.len() {
-        match get_char_metadata(unsafe { bytes.as_ptr().add(ind).read() }) {
+    while ind < in_len {
+        match get_char_metadata(unsafe { in_ptr.add(ind).read() }) {
             Character::SingleByte { data } => {
                 ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
@@ -90,8 +91,8 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
                     }
                     if is_last_whitespace {
                         unsafe {
-                            out.as_mut_vec().unsafe_custom_extend(
-                                bytes.as_ptr().add(ind).sub(copy_len).sub(1),
+                            out.unsafe_custom_extend(
+                                in_ptr.add(ind).sub(copy_len).sub(1),
                                 copy_len,
                             );
                         }
@@ -117,55 +118,58 @@ fn sift_preallocated(bytes: &[u8], out: &mut String) {
         is_last_carriage_return_line_feed = false;
     }
     unsafe {
-        out.as_mut_vec()
-            .unsafe_custom_extend(bytes.as_ptr().add(ind).sub(copy_len), copy_len);
+        out.unsafe_custom_extend(in_ptr.add(ind).sub(copy_len), copy_len);
     }
     // Implementation of str::trim_end()
     if is_last_carriage_return_line_feed {
         let new_out_len: usize = unsafe { out.len().unchecked_sub(2) };
-        unsafe { out.as_mut_vec().set_len(new_out_len) };
+        unsafe { out.set_len(new_out_len) };
         return;
     }
     sift_trim_end(out, is_last_whitespace);
 }
 
 /// A utility for `sift_preserve_newlines`.
-fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut String) {
-    sift_trim_start(bytes, ind, out);
+fn sift_preallocated_until_newline(
+    in_ptr: *const u8,
+    in_len: usize,
+    ind: &mut usize,
+    out: &mut Vec<u8>,
+) {
+    sift_trim_start(in_ptr, in_len, ind, out);
     // Actual sifting
     let mut copy_len: usize = 0;
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
-    while *ind < bytes.len() {
-        match get_char_metadata(unsafe { bytes.as_ptr().add(*ind).read() }) {
+    while *ind < in_len {
+        match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
                 if is_ascii_whitespace(data) {
                     if data == LINE_FEED {
                         unsafe {
-                            out.as_mut_vec().unsafe_custom_extend(
-                                bytes.as_ptr().add(*ind).sub(copy_len).sub(1),
+                            out.unsafe_custom_extend(
+                                in_ptr.add(*ind).sub(copy_len).sub(1),
                                 copy_len,
                             );
                         }
                         // Implementation of str::trim_end()
-                        let out_mut: &mut Vec<u8> = unsafe { out.as_mut_vec() };
                         if is_last_whitespace {
-                            let new_out_mut_len: usize = unsafe { out_mut.len().unchecked_sub(1) };
-                            unsafe { out_mut.set_len(new_out_mut_len) };
+                            let new_out_mut_len: usize = unsafe { out.len().unchecked_sub(1) };
+                            unsafe { out.set_len(new_out_mut_len) };
                         }
                         // Append newline
                         if is_last_carriage_return {
-                            unsafe { out_mut.unsafe_push(CARRIAGE_RETURN) };
+                            unsafe { out.unsafe_push(CARRIAGE_RETURN) };
                         }
-                        unsafe { out_mut.unsafe_push(LINE_FEED) };
+                        unsafe { out.unsafe_push(LINE_FEED) };
                         return;
                     }
                     is_last_carriage_return = data == CARRIAGE_RETURN;
                     if is_last_whitespace {
                         unsafe {
-                            out.as_mut_vec().unsafe_custom_extend(
-                                bytes.as_ptr().add(*ind).sub(copy_len).sub(1),
+                            out.unsafe_custom_extend(
+                                in_ptr.add(*ind).sub(copy_len).sub(1),
                                 copy_len,
                             );
                         }
@@ -189,27 +193,25 @@ fn sift_preallocated_until_newline(bytes: &[u8], ind: &mut usize, out: &mut Stri
         is_last_whitespace = false;
     }
     unsafe {
-        out.as_mut_vec()
-            .unsafe_custom_extend(bytes.as_ptr().add(*ind).sub(copy_len), copy_len);
+        out.unsafe_custom_extend(in_ptr.add(*ind).sub(copy_len), copy_len);
     }
     sift_trim_end(out, is_last_whitespace);
 }
 
 /// A custom implementation of `str::trim_start`.
-fn sift_trim_start(bytes: &[u8], ind: &mut usize, out: &mut String) {
-    while *ind < bytes.len() {
-        match get_char_metadata(unsafe { bytes.as_ptr().add(*ind).read() }) {
+fn sift_trim_start(in_ptr: *const u8, in_len: usize, ind: &mut usize, out: &mut Vec<u8>) {
+    while *ind < in_len {
+        match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
                 if !is_ascii_whitespace(data) {
-                    unsafe { out.as_mut_vec().unsafe_push(data) };
+                    unsafe { out.unsafe_push(data) };
                     break;
                 }
             }
             Character::MultiByte { len } => {
                 unsafe {
-                    out.as_mut_vec()
-                        .unsafe_custom_extend(bytes.as_ptr().add(*ind), len);
+                    out.unsafe_custom_extend(in_ptr.add(*ind), len);
                 }
                 *ind = unsafe { ind.unchecked_add(len) };
                 break;
@@ -219,10 +221,10 @@ fn sift_trim_start(bytes: &[u8], ind: &mut usize, out: &mut String) {
 }
 
 /// A custom implementation for `str::trim_end`.
-fn sift_trim_end(out: &mut String, is_last_whitespace: bool) {
+fn sift_trim_end(out: &mut Vec<u8>, is_last_whitespace: bool) {
     if is_last_whitespace {
         let new_out_len: usize = unsafe { out.len().unchecked_sub(1) };
-        unsafe { out.as_mut_vec().set_len(new_out_len) };
+        unsafe { out.set_len(new_out_len) };
     }
 }
 
