@@ -1,6 +1,6 @@
 [package]
 name = "whitespace-sifter"
-version = "2.3.4-alpha.6"
+version = "2.3.4"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"
@@ -11,7 +11,9 @@ repository = "https://github.com/JumperBot/whitespace-sifter/"
 rust-version = "1.79.0"
 
 [dev-dependencies]
+# collapse = "0.1.2"
 criterion = "0.5.1"
+# fast_whitespace_collapse = "0.1.0"
 
 [[bench]]
 name = "bench"

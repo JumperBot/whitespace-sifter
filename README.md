@@ -66,14 +66,41 @@ Benchmark specifications:
 <li>Processor: Intel(R) Core(TM) i5-8350U CPU @ 1.70GHz 1.90 GHz</li>
 <li>Memory: RAM 16.0 GB (15.8 GB usable)</li>
 <li>System: GNU/Linux 5.15.153.1-microsoft-standard-WSL2 x86_64</li>
-<li>Modified: v2.3.4-alpha.5</li>
+<li>Modified: v2.3.4</li>
 </ul>
 </details>
 
 ---
 
+## 📈 Crate Comparison
+
+Using the same benchmark configuration:
+
+| Crate                                                                         | Dictionary          | Features          |  Time   | Complete Sift |
+| ----------------------------------------------------------------------------- | ------------------- | ----------------- | :-----: | :-----------: |
+| [whitespace-sifter](https://crates.io/crates/whitespace-sifter)               | ASCII Whitespaces   | Preserve Newlines | ~170 µs |      ✅       |
+| [collapse](https://crates.io/crates/collapse)                                 | Unicode Whitespaces |                   | ~270 µs |      ✅       |
+| [fast_whitespace_collapse](https://crates.io/crates/fast_whitespace_collapse) | ASCII Space and Tab | SIMD              | ~160 µs |      ❌       |
+
+##### Disclaimers:
+
+###### 1: I do not know the crate maintainers nor asked for permission to include their crates here.
+
+###### 2: As far as I know, there are only three crates dedicated to whitespace sifting/collapse.
+
+###### 3: `fast_whitespace_collapse` was not able to collapse cr-lf and line feeds.
+
+| Dictionary                                                                                         | Characters                                          |
+| -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [ASCII Whitespaces](https://doc.rust-lang.org/core/primitive.char.html#method.is_ascii_whitespace) | `'\t' \| '\n' \| '\x0C' \| '\r' \| ' '`             |
+| [Unicode Whitespaces](https://doc.rust-lang.org/core/primitive.char.html#method.is_whitespace)     | `' ' \| '\x09'..='\x0d' \| unicode::White_Space(c)` |
+| ASCII Space and Tab                                                                                | `' ' \| '\t'`                                       |
+
+---
+
 ## 🔊 Changelog
 
+- Improved Performance
 - Minimum Supported Rust Version set to `v1.79.0` (starting `v2.3.3`)
 - Stricter Tests (starting `v2.3.2`)
   - Proper UTF-8/Unicode Encoding
@@ -81,6 +108,7 @@ Benchmark specifications:
   - Sifting With Leading Whitespaces
   - Documentation Assertion
   - MSRV Verification
+- Crate Comparison (starting `v2.3.4`)
 
 ---
 
