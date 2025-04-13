@@ -61,21 +61,21 @@ fn test_docs() {
 
 #[test]
 fn verify_msrv() {
-    let cmd: Output = Command::new("cargo")
-        .args(&["msrv", "verify"])
+    let verify_out: Output = Command::new("cargo")
+        .args(["msrv", "verify"])
         .output()
         .expect("Failed to verify MSRV");
 
-    assert!(cmd.status.success());
+    assert!(verify_out.status.success());
 
     let cmp: &str = "OK";
-    assert!(cmd
+    assert!(verify_out
         .stdout
         .windows(cmp.len())
         .any(|window| window == cmp.as_bytes()));
 
     let cmp: &str = "Is compatible";
-    assert!(cmd
+    assert!(verify_out
         .stdout
         .windows(cmp.len())
         .any(|window| window == cmp.as_bytes()));

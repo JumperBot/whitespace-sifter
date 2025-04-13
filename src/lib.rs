@@ -20,8 +20,10 @@
 //! );
 //! ```
 
+mod character;
 mod unsafe_vec;
 
+use character::{Character, CharacterHelper, CARRIAGE_RETURN, LINE_FEED};
 use unsafe_vec::UnsafeVec;
 
 /// A trait containing all `string` whitespace-sifting functions.
@@ -79,10 +81,10 @@ fn sift_preallocated(in_ptr: *const u8, in_len: usize, out: &mut Vec<u8>) {
     let mut is_last_carriage_return: bool = false;
     let mut is_last_carriage_return_line_feed: bool = false;
     while ind < in_len {
-        match get_char_metadata(unsafe { in_ptr.add(ind).read() }) {
+        match unsafe { in_ptr.add(ind).read() }.get_char_metadata() {
             Character::SingleByte { data } => {
                 ind = unsafe { ind.unchecked_add(1) };
-                if is_ascii_whitespace(data) {
+                if data.is_ascii_whitespace() {
                     if data == LINE_FEED && is_last_carriage_return {
                         copy_len = unsafe { copy_len.unchecked_add(1) };
                         is_last_carriage_return = false;
@@ -142,10 +144,10 @@ fn sift_preallocated_until_newline(
     let mut is_last_whitespace: bool = false;
     let mut is_last_carriage_return: bool = false;
     while *ind < in_len {
-        match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
+        match unsafe { in_ptr.add(*ind).read() }.get_char_metadata() {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
-                if is_ascii_whitespace(data) {
+                if data.is_ascii_whitespace() {
                     if data == LINE_FEED {
                         unsafe {
                             out.unsafe_custom_extend(
@@ -201,10 +203,10 @@ fn sift_preallocated_until_newline(
 /// A custom implementation of `str::trim_start`.
 fn sift_trim_start(in_ptr: *const u8, in_len: usize, ind: &mut usize, out: &mut Vec<u8>) {
     while *ind < in_len {
-        match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
+        match unsafe { in_ptr.add(*ind).read() }.get_char_metadata() {
             Character::SingleByte { data } => {
                 *ind = unsafe { ind.unchecked_add(1) };
-                if !is_ascii_whitespace(data) {
+                if !data.is_ascii_whitespace() {
                     unsafe { out.unsafe_push(data) };
                     break;
                 }
@@ -226,42 +228,6 @@ fn sift_trim_end(out: &mut Vec<u8>, is_last_whitespace: bool) {
         let new_out_len: usize = unsafe { out.len().unchecked_sub(1) };
         unsafe { out.set_len(new_out_len) };
     }
-}
-
-enum Character {
-    SingleByte { data: u8 },
-    MultiByte { len: usize },
-}
-
-/// Binary extracted from [std](https://doc.rust-lang.org/src/core/str/validations.rs.html#36).
-#[inline]
-const fn get_char_metadata(first_byte: u8) -> Character {
-    match first_byte {
-        0b0000_0000..=0b0111_1111 => Character::SingleByte { data: first_byte },
-        0b1000_0000..=0b1101_1111 => Character::MultiByte { len: 2 },
-        0b1110_0000..=0b1110_1111 => Character::MultiByte { len: 3 },
-        0b1111_0000..=0b1111_1111 => Character::MultiByte { len: 4 },
-    }
-}
-
-#[allow(clippy::cast_possible_truncation)]
-const SPACE: u8 = ' ' as u32 as u8;
-#[allow(clippy::cast_possible_truncation)]
-const HORIZONTAL_TAB: u8 = '\t' as u32 as u8;
-#[allow(clippy::cast_possible_truncation)]
-const LINE_FEED: u8 = '\n' as u32 as u8;
-#[allow(clippy::cast_possible_truncation)]
-const FORM_FEED: u8 = '\x0C' as u32 as u8;
-#[allow(clippy::cast_possible_truncation)]
-const CARRIAGE_RETURN: u8 = '\r' as u32 as u8;
-
-/// Values extracted from [std](https://doc.rust-lang.org/src/core/char/methods.rs.html#1680).
-#[inline]
-const fn is_ascii_whitespace(codepoint: u8) -> bool {
-    matches!(
-        codepoint,
-        SPACE | HORIZONTAL_TAB | LINE_FEED | FORM_FEED | CARRIAGE_RETURN
-    )
 }
 
 #[cfg(test)]
