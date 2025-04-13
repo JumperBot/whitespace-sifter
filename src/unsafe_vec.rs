@@ -1,4 +1,5 @@
 /// Push to a `Vec` without checking the capacity.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub(crate) unsafe fn unsafe_push(vec: &mut Vec<u8>, item: u8) {
     unsafe {
@@ -8,6 +9,7 @@ pub(crate) unsafe fn unsafe_push(vec: &mut Vec<u8>, item: u8) {
 }
 
 /// Extend to a `Vec` without checking the capacity.
+#[allow(clippy::inline_always)]
 #[inline(always)]
 pub(crate) unsafe fn unsafe_custom_extend(vec: &mut Vec<u8>, ptr: *const u8, len: usize) {
     unsafe {

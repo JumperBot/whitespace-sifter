@@ -20,8 +20,14 @@
 //! );
 //! ```
 
+mod character;
+mod sift;
+mod sift_preserve_newlines;
 mod unsafe_vec;
 
+use character::{get_char_metadata, Character, CARRIAGE_RETURN, LINE_FEED};
+use sift::sift_preallocated;
+use sift_preserve_newlines::sift_preallocated_until_newline;
 use unsafe_vec::{unsafe_custom_extend, unsafe_push};
 
 /// A trait containing all `string` whitespace-sifting functions.
@@ -33,7 +39,7 @@ pub trait WhitespaceSifter: AsRef<str> {
     fn sift(&self) -> String {
         let input: &str = self.as_ref();
         let mut out: String = String::with_capacity(input.len());
-        crate::sift_preallocated(input.as_ptr(), input.len(), unsafe { out.as_mut_vec() });
+        sift_preallocated(input.as_ptr(), input.len(), unsafe { out.as_mut_vec() });
         out
     }
 
@@ -50,7 +56,7 @@ pub trait WhitespaceSifter: AsRef<str> {
         let out_vec: &mut Vec<u8> = unsafe { out.as_mut_vec() };
         let mut ind: usize = 0;
         while ind < in_len {
-            crate::sift_preallocated_until_newline(in_ptr, in_len, &mut ind, out_vec);
+            sift_preallocated_until_newline(in_ptr, in_len, &mut ind, out_vec);
         }
         if out_vec.len() > 1 {
             let new_out_mut_len: usize = unsafe { out_vec.len().unchecked_sub(2) };
@@ -69,141 +75,15 @@ pub trait WhitespaceSifter: AsRef<str> {
 
 impl<T: AsRef<str>> WhitespaceSifter for T {}
 
-/// A utility for `sift`.
-fn sift_preallocated(in_ptr: *const u8, in_len: usize, out: &mut Vec<u8>) {
-    let mut ind: usize = 0;
-    sift_trim_start(in_ptr, in_len, &mut ind, out);
-    // Actual sifting
-    let mut copy_len: usize = 0;
-    let mut is_last_whitespace: bool = false;
-    let mut is_last_carriage_return: bool = false;
-    let mut is_last_carriage_return_line_feed: bool = false;
-    while ind < in_len {
-        match get_char_metadata(unsafe { in_ptr.add(ind).read() }) {
-            Character::SingleByte { data } => {
-                ind = unsafe { ind.unchecked_add(1) };
-                if data.is_ascii_whitespace() {
-                    if data == LINE_FEED && is_last_carriage_return {
-                        copy_len = unsafe { copy_len.unchecked_add(1) };
-                        is_last_carriage_return = false;
-                        is_last_carriage_return_line_feed = true;
-                        continue;
-                    }
-                    if is_last_whitespace {
-                        unsafe {
-                            unsafe_custom_extend(
-                                out,
-                                in_ptr.add(ind).sub(copy_len).sub(1),
-                                copy_len,
-                            );
-                        }
-                        copy_len = 0;
-                        continue;
-                    }
-                    is_last_whitespace = true;
-                } else {
-                    is_last_whitespace = false;
-                }
-                copy_len = unsafe { copy_len.unchecked_add(1) };
-                is_last_carriage_return = data == CARRIAGE_RETURN;
-                is_last_carriage_return_line_feed = false;
-                continue;
-            }
-            Character::MultiByte { len } => {
-                copy_len = unsafe { copy_len.unchecked_add(len) };
-                ind = unsafe { ind.unchecked_add(len) };
-            }
-        }
-        is_last_carriage_return = false;
-        is_last_whitespace = false;
-        is_last_carriage_return_line_feed = false;
-    }
-    unsafe {
-        unsafe_custom_extend(out, in_ptr.add(ind).sub(copy_len), copy_len);
-    }
-    // Implementation of str::trim_end()
-    if is_last_carriage_return_line_feed {
-        let new_out_len: usize = unsafe { out.len().unchecked_sub(2) };
-        unsafe { out.set_len(new_out_len) };
-        return;
-    }
-    sift_trim_end(out, is_last_whitespace);
-}
-
-/// A utility for `sift_preserve_newlines`.
-fn sift_preallocated_until_newline(
+/// A custom implementation of `str::trim_start`.
+#[allow(clippy::inline_always)]
+#[inline(always)]
+pub(crate) fn sift_trim_start(
     in_ptr: *const u8,
     in_len: usize,
     ind: &mut usize,
     out: &mut Vec<u8>,
 ) {
-    sift_trim_start(in_ptr, in_len, ind, out);
-    // Actual sifting
-    let mut copy_len: usize = 0;
-    let mut is_last_whitespace: bool = false;
-    let mut is_last_carriage_return: bool = false;
-    while *ind < in_len {
-        match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
-            Character::SingleByte { data } => {
-                *ind = unsafe { ind.unchecked_add(1) };
-                if data.is_ascii_whitespace() {
-                    if data == LINE_FEED {
-                        unsafe {
-                            unsafe_custom_extend(
-                                out,
-                                in_ptr.add(*ind).sub(copy_len).sub(1),
-                                copy_len,
-                            );
-                        }
-                        // Implementation of str::trim_end()
-                        if is_last_whitespace {
-                            let new_out_mut_len: usize = unsafe { out.len().unchecked_sub(1) };
-                            unsafe { out.set_len(new_out_mut_len) };
-                        }
-                        // Append newline
-                        if is_last_carriage_return {
-                            unsafe { unsafe_push(out, CARRIAGE_RETURN) };
-                        }
-                        unsafe { unsafe_push(out, LINE_FEED) };
-                        return;
-                    }
-                    is_last_carriage_return = data == CARRIAGE_RETURN;
-                    if is_last_whitespace {
-                        unsafe {
-                            unsafe_custom_extend(
-                                out,
-                                in_ptr.add(*ind).sub(copy_len).sub(1),
-                                copy_len,
-                            );
-                        }
-                        copy_len = 0;
-                        continue;
-                    }
-                    is_last_whitespace = true;
-                } else {
-                    is_last_whitespace = false;
-                }
-                copy_len = unsafe { copy_len.unchecked_add(1) };
-                is_last_carriage_return = data == CARRIAGE_RETURN;
-                continue;
-            }
-            Character::MultiByte { len } => {
-                copy_len = unsafe { copy_len.unchecked_add(len) };
-                *ind = unsafe { ind.unchecked_add(len) };
-            }
-        }
-        is_last_carriage_return = false;
-        is_last_whitespace = false;
-    }
-    unsafe {
-        unsafe_custom_extend(out, in_ptr.add(*ind).sub(copy_len), copy_len);
-    }
-    sift_trim_end(out, is_last_whitespace);
-}
-
-/// A custom implementation of `str::trim_start`.
-#[inline(always)]
-fn sift_trim_start(in_ptr: *const u8, in_len: usize, ind: &mut usize, out: &mut Vec<u8>) {
     while *ind < in_len {
         match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
             Character::SingleByte { data } => {
@@ -225,33 +105,14 @@ fn sift_trim_start(in_ptr: *const u8, in_len: usize, ind: &mut usize, out: &mut 
 }
 
 /// A custom implementation for `str::trim_end`.
+#[allow(clippy::inline_always)]
 #[inline(always)]
-fn sift_trim_end(out: &mut Vec<u8>, is_last_whitespace: bool) {
+pub(crate) fn sift_trim_end(out: &mut Vec<u8>, is_last_whitespace: bool) {
     if is_last_whitespace {
         let new_out_len: usize = unsafe { out.len().unchecked_sub(1) };
         unsafe { out.set_len(new_out_len) };
     }
 }
-
-enum Character {
-    SingleByte { data: u8 },
-    MultiByte { len: usize },
-}
-
-/// Binary extracted from [std](https://doc.rust-lang.org/src/core/str/validations.rs.html#36).
-#[inline(always)]
-const fn get_char_metadata(first_byte: u8) -> Character {
-    match first_byte {
-        0b0000_0000..=0b0111_1111 => Character::SingleByte { data: first_byte },
-        0b1000_0000..=0b1101_1111 => Character::MultiByte { len: 2 },
-        0b1110_0000..=0b1110_1111 => Character::MultiByte { len: 3 },
-        0b1111_0000..=0b1111_1111 => Character::MultiByte { len: 4 },
-    }
-}
-
-const LINE_FEED: u8 = '\n' as u32 as u8;
-#[allow(clippy::cast_possible_truncation)]
-const CARRIAGE_RETURN: u8 = '\r' as u32 as u8;
 
 #[cfg(test)]
 mod tests;
