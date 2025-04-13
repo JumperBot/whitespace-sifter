@@ -22,6 +22,10 @@ fn test_sift_leading_whitespaces() {
     let input: String = "a\r\n\n\t b\r\n\r\n\r\n".to_owned();
     let out: String = "a\r\nb".to_owned();
     assert_eq!(input.sift(), out);
+    let input: String = "a\r\n\n\t b\t ".to_owned();
+    assert_eq!(input.sift(), out);
+    let input: String = "a\r\n\n\t b\t \n".to_owned();
+    assert_eq!(input.sift(), out);
 }
 
 #[test]
@@ -36,14 +40,20 @@ fn test_sift_preserve_newlines_leading_whitespaces() {
     let input: String = "a \r\n\n\t b\r\n\r\n\r\n".to_owned();
     let out: String = "a\r\nb".to_owned();
     assert_eq!(input.sift_preserve_newlines(), out);
+    let input: String = "a \r\n\n\t b\t ".to_owned();
+    assert_eq!(input.sift_preserve_newlines(), out);
+    let input: String = "a \r\n\n\t b\t \n".to_owned();
+    assert_eq!(input.sift_preserve_newlines(), out);
 }
 
 #[test]
 fn test_all_blank_output() {
     assert_eq!(&"".sift(), "");
     assert_eq!(&"\n\r\n".sift(), "");
+    assert_eq!(&"\t ".sift(), "");
     assert_eq!(&"".sift_preserve_newlines(), "");
     assert_eq!(&"\n\r\n".sift_preserve_newlines(), "");
+    assert_eq!(&"\t ".sift_preserve_newlines(), "");
 }
 
 #[test]
