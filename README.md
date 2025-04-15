@@ -36,6 +36,32 @@ It naturally removes the whitespaces at the start and end of the `string`.
 
 ---
 
+## 📈 Crate Comparison
+
+| Crate                           | Implementation                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [whitespace-sifter][ws]         | Any [`AsRef<str>`][aref_str] as input, [`CR-LF`][crlf] compatibility, [`preserve_newlines`][pres_nl] |
+| [collapse][collapse]            | `&str` input only                                                                                    |
+| [fast_whitespace_collapse][fwc] | `&str` input only, `SIMD` with fallback for any unsupported `rustc` `target`                         |
+
+---
+
+| Crate                           | Whitespace Dictionary                                         |  Time   | Complete |
+| ------------------------------- | ------------------------------------------------------------- | :-----: | :------: |
+| [whitespace-sifter][ws]         | [`'\t' \| '\n' \| '\x0C' \| '\r' \| ' '\| "\r\n"`][ascii_ws]  | ~170 µs |    ✅    |
+| [collapse][collapse]            | [`' ' \| '\x09'..='\x0d' \| unicode::White_Space(c)`][unc_ws] | ~270 µs |    ✅    |
+| [fast_whitespace_collapse][fwc] | `' ' \| '\t'`                                                 | ~160 µs |    ❌    |
+
+### Disclaimers:
+
+1. I do not know the crate maintainers nor asked for permission to include their crates here.
+
+2. As far as I know, there are only three crates dedicated to whitespace sifting/collapse.
+
+3. `fast_whitespace_collapse` was not able to collapse cr-lf and line feeds.
+
+---
+
 ## ⚡️Benchmarks
 
 Performance is a priority; Most updates are performance improvements.  
@@ -45,7 +71,7 @@ Execute these commands to benchmark:
 
 ```bash
 $ git clone https://github.com/JumperBot/whitespace-sifter.git
-$ cd whitespace-sifter
+$ cd whitespace-sifter/bench
 $ cargo bench
 ```
 
@@ -72,32 +98,6 @@ Benchmark specifications:
 
 ---
 
-## 📈 Crate Comparison
-
-Using the same benchmark configuration:
-
-| Crate                                                                         | Dictionary          | Features          |  Time   | Complete Sift |
-| ----------------------------------------------------------------------------- | ------------------- | ----------------- | :-----: | :-----------: |
-| [whitespace-sifter](https://crates.io/crates/whitespace-sifter)               | ASCII Whitespaces   | Preserve Newlines | ~170 µs |      ✅       |
-| [collapse](https://crates.io/crates/collapse)                                 | Unicode Whitespaces |                   | ~270 µs |      ✅       |
-| [fast_whitespace_collapse](https://crates.io/crates/fast_whitespace_collapse) | ASCII Space and Tab | SIMD              | ~160 µs |      ❌       |
-
-##### Disclaimers:
-
-###### 1: I do not know the crate maintainers nor asked for permission to include their crates here.
-
-###### 2: As far as I know, there are only three crates dedicated to whitespace sifting/collapse.
-
-###### 3: `fast_whitespace_collapse` was not able to collapse cr-lf and line feeds.
-
-| Dictionary                                                                                         | Characters                                          |
-| -------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| [ASCII Whitespaces](https://doc.rust-lang.org/core/primitive.char.html#method.is_ascii_whitespace) | `'\t' \| '\n' \| '\x0C' \| '\r' \| ' '`             |
-| [Unicode Whitespaces](https://doc.rust-lang.org/core/primitive.char.html#method.is_whitespace)     | `' ' \| '\x09'..='\x0d' \| unicode::White_Space(c)` |
-| ASCII Space and Tab                                                                                | `' ' \| '\t'`                                       |
-
----
-
 ## 🔊 Changelog
 
 - Improved Performance
@@ -109,9 +109,19 @@ Using the same benchmark configuration:
   - Documentation Assertion
   - MSRV Verification
 - Crate Comparison (starting `v2.3.4`)
+- Benchmark Separation (starting `v2.3.5`)
 
 ---
 
 ## 📄 Licensing
 
 `whitespace-sifter` is licensed under the [`MIT LICENSE`](./LICENSE); This is the [`summarization`](https://choosealicense.com/licenses/mit/).
+
+[ws]: https://crates.io/crates/whitespace-sifter
+[collapse]: https://crates.io/crates/collapse
+[fwc]: https://crates.io/crates/fast_whitespace_collapse
+[aref_str]: https://doc.rust-lang.org/std/convert/trait.AsRef.html#implementors
+[crlf]: https://stackoverflow.com/a/39259747
+[pres_nl]: https://docs.rs/whitespace-sifter/latest/whitespace_sifter/trait.WhitespaceSifter.html#method.sift_preserve_newlines
+[ascii_ws]: https://doc.rust-lang.org/core/primitive.char.html#method.is_ascii_whitespace
+[unc_ws]: https://doc.rust-lang.org/core/primitive.char.html#method.is_whitespace

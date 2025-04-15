@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use whitespace_sifter::WhitespaceSifter;
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let input: String = read_to_string("Bee_Movie_Script.txt").unwrap();
+    let input: String = read_to_string("../Bee_Movie_Script.txt").unwrap();
     c.bench_with_input(BenchmarkId::new("Sift", "Sift"), &input, |c, input| {
         c.iter(|| input.sift());
     });
