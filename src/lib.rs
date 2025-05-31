@@ -116,3 +116,9 @@ pub(crate) fn sift_trim_end(out: &mut Vec<u8>, is_last_whitespace: bool) {
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod msrv_test;
+
+#[cfg(test)]
+mod compliance_test;

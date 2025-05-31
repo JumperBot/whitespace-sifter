@@ -1,7 +1,5 @@
 use crate::WhitespaceSifter;
 
-use std::process::{Command, Output};
-
 #[test]
 fn test_unicode_compatibility() {
     let input: String = "  a1❤️🌐🚀1a  ".to_owned();
@@ -67,26 +65,4 @@ fn test_docs() {
             .sift_preserve_newlines(),
         "1..\n2..\n3..\n4..\r\n5.."
     );
-}
-
-#[test]
-fn verify_msrv() {
-    let verify_out: Output = Command::new("cargo")
-        .args(["msrv", "verify"])
-        .output()
-        .expect("Failed to verify MSRV");
-
-    assert!(verify_out.status.success());
-
-    let cmp: &str = "OK";
-    assert!(verify_out
-        .stdout
-        .windows(cmp.len())
-        .any(|window| window == cmp.as_bytes()));
-
-    let cmp: &str = "Is compatible";
-    assert!(verify_out
-        .stdout
-        .windows(cmp.len())
-        .any(|window| window == cmp.as_bytes()));
 }
