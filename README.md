@@ -98,16 +98,41 @@ Benchmark specifications:
 
 ---
 
+## ➕ Dependency
+
+Add this to your project with:
+
+```bash
+$ cargo add whitespace-sifter
+```
+
+## 📦️ Installation
+
+Download the binary with:
+
+```bash
+$ cargo install whitespace-sifter
+```
+
+Use it as usual:
+
+```bash
+$ echo "Hello    there!" | whitespace-sifter
+$ cat document.txt | whitespace-sifter --preserve-newlines
+```
+
 ## 🔊 Changelog
 
 - Improved Performance
 - Minimum Supported Rust Version set to `v1.79.0` (starting `v2.3.3`)
+- Crate binary (starting `v2.3.6`)
 - Stricter Tests (starting `v2.3.2`)
   - Proper UTF-8/Unicode Encoding
   - Regular Sifting
   - Sifting With Leading Whitespaces
   - Documentation Assertion
   - MSRV Verification
+  - Compliance Check for Old Versions
 - Crate Comparison (starting `v2.3.4`)
 - Benchmark Separation (starting `v2.3.5`)
 

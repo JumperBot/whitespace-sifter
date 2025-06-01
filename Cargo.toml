@@ -1,6 +1,6 @@
 [package]
 name = "whitespace-sifter"
-version = "2.3.6-alpha.1"
+version = "2.3.6"
 edition = "2021"
 authors = ["JumperBot_"]
 description = "Sift duplicate whitespaces away!"
@@ -16,3 +16,10 @@ test = true
 doctest = true
 doc = true
 crate-type = ["lib"]
+
+[[bin]]
+name = "whitespace-sifter"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.39", features = ["derive"] }
