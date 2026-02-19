@@ -1,5 +1,5 @@
 //! Sift duplicate whitespaces away in just one function call.
-//! This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a UTF-8 encoded `string`.  
+//! This crate **helps you** remove duplicate [whitespaces](https://doc.rust-lang.org/reference/whitespace.html) within a UTF-8 encoded `string`.\
 //! It naturally removes the whitespaces at the start and end of the `string`.
 //!
 //! # Examples
@@ -86,18 +86,19 @@ pub(crate) fn sift_trim_start(
 ) {
     while *ind < in_len {
         match get_char_metadata(unsafe { in_ptr.add(*ind).read() }) {
-            Character::SingleByte { data } => {
+            Character::LineFeed | Character::CarriageReturn | Character::NormalWhitespace => {
                 *ind = unsafe { ind.unchecked_add(1) };
-                if !data.is_ascii_whitespace() {
-                    unsafe { unsafe_push(out, data) };
-                    break;
-                }
+            }
+            Character::SingleByte => {
+                unsafe { unsafe_push(out, in_ptr.add(*ind).read()) };
+                *ind = unsafe { ind.unchecked_add(1) };
+                break;
             }
             Character::MultiByte { len } => {
                 unsafe {
-                    unsafe_custom_extend(out, in_ptr.add(*ind), len);
+                    unsafe_custom_extend(out, in_ptr.add(*ind), len as usize);
                 }
-                *ind = unsafe { ind.unchecked_add(len) };
+                *ind = unsafe { ind.unchecked_add(len as usize) };
                 break;
             }
         }

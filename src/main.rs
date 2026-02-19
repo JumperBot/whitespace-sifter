@@ -21,16 +21,15 @@ struct Args {
 fn main() {
     let args: Args = Args::parse();
 
-    let input: String = match args.input {
-        Some(val) => val,
-        None => {
-            let mut buf = String::new();
-            if let Err(err) = std::io::stdin().read_to_string(&mut buf) {
-                eprintln!("Error reading from stdin: {err}");
-                std::process::exit(1);
-            }
-            buf
+    let input: String = if let Some(val) = args.input {
+        val
+    } else {
+        let mut buf = String::new();
+        if let Err(err) = std::io::stdin().read_to_string(&mut buf) {
+            eprintln!("Error reading from stdin: {err}");
+            std::process::exit(1);
         }
+        buf
     };
 
     if args.preserve_newlines {
